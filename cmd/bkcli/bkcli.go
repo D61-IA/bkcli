@@ -12,11 +12,11 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-func get_token() string {
+func getToken() string {
 
-	home_path := os.Getenv("HOME")
+	homePath := os.Getenv("HOME")
 
-	cfg, err := ini.Load(fmt.Sprintf("%s/.buildkite/config", home_path))
+	cfg, err := ini.Load(fmt.Sprintf("%s/.bkcli/config", homePath))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -30,15 +30,15 @@ func get_token() string {
 	return token
 }
 
-func http_request(token string, url string, method string) string {
+func httprequest(token string, url string, method string) string {
 
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	token_header := fmt.Sprintf("Bearer %s", token)
-	req.Header.Set("Authorization", token_header)
+	tokenHeader := fmt.Sprintf("Bearer %s", token)
+	req.Header.Set("Authorization", tokenHeader)
 	req.Header.Set("Accept", "text/plain")
 	client := &http.Client{}
 
@@ -55,52 +55,52 @@ func http_request(token string, url string, method string) string {
 
 }
 
-func get_pipelines(token string, api_endpoint string, organization string) string {
-	url := fmt.Sprintf("%s/organizations/%s/pipelines", api_endpoint, organization)
-	return http_request(token, url, "GET")
+func getPipelines(token string, apiEndpoint string, organization string) string {
+	url := fmt.Sprintf("%s/organizations/%s/pipelines", apiEndpoint, organization)
+	return httprequest(token, url, "GET")
 }
 
-func get_log(token string, api_endpoint string, organization string, pipeline string, build_number string, job_id string) string {
-	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s/jobs/%s/log", api_endpoint, organization, pipeline, build_number, job_id)
-	return http_request(token, url, "GET")
+func getLog(token string, apiEndpoint string, organization string, pipeline string, build string, jobID string) string {
+	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s/jobs/%s/log", apiEndpoint, organization, pipeline, build, jobID)
+	return httprequest(token, url, "GET")
 }
 
-func get_latest_build(token string, api_endpoint string, organization string, pipeline string) string {
-	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds", api_endpoint, organization, pipeline)
-	response := http_request(token, url, "GET")
+func getLatestBuild(token string, apiEndpoint string, organization string, pipeline string) string {
+	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds", apiEndpoint, organization, pipeline)
+	response := httprequest(token, url, "GET")
 	return gjson.Get(response, "0.number").String()
 }
 
-func get_job_ids(token string, api_endpoint string, organization string, pipeline string, build string, follow bool) {
-	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s", api_endpoint, organization, pipeline, build)
-	response := http_request(token, url, "GET")
+func getJobIds(token string, apiEndpoint string, organization string, pipeline string, build string, follow bool) {
+	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s", apiEndpoint, organization, pipeline, build)
+	response := httprequest(token, url, "GET")
 
 	ids := gjson.Get(response, "jobs.#.id")
 	for _, id := range ids.Array() {
-		fmt.Println(get_log(token, api_endpoint, organization, pipeline, build, id.String()))
+		fmt.Println(getLog(token, apiEndpoint, organization, pipeline, build, id.String()))
 	}
 }
 
-func find_commit(token string, api_endpoint string, organization string, pipeline string, commit string, follow bool) {
-	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds?commit=%s", api_endpoint, organization, pipeline, commit)
-	response := http_request(token, url, "GET")
+func findCommit(token string, apiEndpoint string, organization string, pipeline string, commit string, follow bool) {
+	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds?commit=%s", apiEndpoint, organization, pipeline, commit)
+	response := httprequest(token, url, "GET")
 	build := gjson.Get(response, "0.number").String()
-	get_job_ids(token, api_endpoint, organization, pipeline, build, follow)
+	getJobIds(token, apiEndpoint, organization, pipeline, build, follow)
 }
 
-func trigger_build(token string, api_endpoint string, organization string, pipeline string, build string) {
-	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s/rebuild", api_endpoint, organization, pipeline, build)
-	http_request(token, url, "PUT")
+func triggerBuild(token string, apiEndpoint string, organization string, pipeline string, build string) {
+	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s/rebuild", apiEndpoint, organization, pipeline, build)
+	httprequest(token, url, "PUT")
 }
 
-func list_agents(token string, api_endpoint string, organization string) {
-	url := fmt.Sprintf("%s/organizations/%s/agents", api_endpoint, organization)
-	response := http_request(token, url, "GET")
+func listAgents(token string, apiEndpoint string, organization string) {
+	url := fmt.Sprintf("%s/organizations/%s/agents", apiEndpoint, organization)
+	response := httprequest(token, url, "GET")
 	fmt.Println(response)
 }
 
 var (
-	api_endpoint = kingpin.Flag("api-endpoint", "Buildkite API endpoint").Default("https://api.buildkite.com/v2").String()
+	apiEndpoint  = kingpin.Flag("api-endpoint", "Buildkite API endpoint").Default("https://api.buildkite.com/v2").String()
 	organization = kingpin.Flag("organization", "Buildkite organization").Default("stellar").String()
 	pipeline     = kingpin.Flag("pipeline", "Buildkite Pipeline").Short('p').String()
 	build        = kingpin.Flag("build", "Buildkite bulild number").Short('b').String()
@@ -108,9 +108,9 @@ var (
 	trigger      = kingpin.Flag("trigger", "Trigger a build").Short('t').Bool()
 	follow       = kingpin.Flag("follow", "follow build output").Short('f').Bool()
 	agents       = kingpin.Flag("agents", "list agents").Short('a').Bool()
-	version      = kingpin.Flag("-version", "list agents").Short('v').Bool()
 )
 
+// Version number to be passed in during build
 var Version = "No Version Produced"
 
 func main() {
@@ -119,35 +119,30 @@ func main() {
 	kingpin.CommandLine.Help = "Buildkite cli tool"
 	kingpin.Parse()
 
-	token := get_token()
-
-	if *version {
-		fmt.Printf("Version: %s\n", Version)
-		os.Exit(0)
-	}
+	token := getToken()
 
 	if *agents {
-		list_agents(token, *api_endpoint, *organization)
+		listAgents(token, *apiEndpoint, *organization)
 		os.Exit(0)
 	}
 
 	if *trigger {
 		if len(*pipeline) > 0 && len(*build) > 0 {
-			trigger_build(token, *api_endpoint, *organization, *pipeline, *build)
+			triggerBuild(token, *apiEndpoint, *organization, *pipeline, *build)
 		} else if len(*pipeline) > 0 && len(*build) == 0 {
-			build := get_latest_build(token, *api_endpoint, *organization, *pipeline)
-			trigger_build(token, *api_endpoint, *organization, *pipeline, build)
+			build := getLatestBuild(token, *apiEndpoint, *organization, *pipeline)
+			triggerBuild(token, *apiEndpoint, *organization, *pipeline, build)
 		}
 		os.Exit(0)
 	}
 
 	if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) == 0 {
-		build := get_latest_build(token, *api_endpoint, *organization, *pipeline)
-		get_job_ids(token, *api_endpoint, *organization, *pipeline, build, *follow)
+		build := getLatestBuild(token, *apiEndpoint, *organization, *pipeline)
+		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow)
 	} else if len(*pipeline) > 0 && len(*build) > 0 && len(*commit) == 0 {
-		get_job_ids(token, *api_endpoint, *organization, *pipeline, *build, *follow)
+		getJobIds(token, *apiEndpoint, *organization, *pipeline, *build, *follow)
 	} else if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) > 0 {
-		find_commit(token, *api_endpoint, *organization, *pipeline, *commit, *follow)
+		findCommit(token, *apiEndpoint, *organization, *pipeline, *commit, *follow)
 	}
 	os.Exit(0)
 }
