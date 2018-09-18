@@ -10,11 +10,11 @@ os = $(word 1, $@)
 
 .PHONY: $(PLATFORMS)
 $(PLATFORMS):
-	mkdir -p release/$(os)
-	GOOS=$(os) GOARCH=amd64 go build -ldflags "-X main.Version=$(VERSION)" -o release/$(os)/$(BINARY) $(SRC)
+	mkdir -p bin/$(os)
+	GOOS=$(os) GOARCH=amd64 go build -ldflags "-X main.Version=$(VERSION)" -o bin/$(os)/$(BINARY) $(SRC)
 
-.PHONY: release
-	release: windows linux darwin
+.PHONY: bin
+	bin: windows linux darwin
 
 .PHONY: version
 version:
@@ -22,4 +22,4 @@ version:
 
 .PHONY: clean
 clean:
-	rm -rf release/*
+	rm -rf bin/*
