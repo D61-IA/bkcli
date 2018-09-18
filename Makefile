@@ -1,5 +1,5 @@
-BINARY=buildkite-cli
-SRC=cmd/buildkite-cli/*.go
+BINARY=bkcli
+SRC=cmd/bkcli/*.go
 BUILDCMD=go build
 VERSION=$$(cat VERSION)
 
