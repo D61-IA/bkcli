@@ -1,0 +1,13 @@
+# swap
+.sw[a-p]
+.*.sw[a-p]
+# session
+Session.vim
+# temporary
+.netrwhist
+*~
+.DS_STORE
+*.pyc
+*.bak
+# binaries
+bin/
