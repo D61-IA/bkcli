@@ -7,7 +7,7 @@ Features:
 * Prints out logs in `ANSI` colors
 * `tail -f` style output for build logs
 * Trigger builds from the command line
-* Uses config `ini` to manage tokens (`~/.bkcli/config`)
+* Uses config ini (`~/.bkcli/config`) to manage all your different tokens and orgs 
 
 
 ## Installing
@@ -70,7 +70,7 @@ For a particular commit hash
 bkcli -p <pipeline> -c <commit hash>
 ```
 
-For `tail -f` a running job, use the `-f` flag
+To `tail -f` a running job, use the `-f` flag
 
 ### Triggering builds
 
