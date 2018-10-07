@@ -15,4 +15,4 @@ FROM alpine:3.8
 COPY --from=builder /go/src/github.com/stellargraph/bkcli/bin/linux /app/
 
 WORKDIR /app
-CMD ["/app/bkcli"]
+ENTRYPOINT ["/app/bkcli"]
