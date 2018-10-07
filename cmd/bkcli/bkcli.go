@@ -169,7 +169,7 @@ var (
 )
 
 // Version number to be passed in during compile time
-var Version = "Non-versioned build"
+var Version = "non-versioned build"
 
 func main() {
 
@@ -183,7 +183,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	token := getToken(*profile)
+	token := os.Getenv("BUILDKITE_TOKEN")
+	if len(token) == 0 {
+		token = getToken(*profile)
+	}
 
 	// Check if agents flag is passed
 	if *agents {
