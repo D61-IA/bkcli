@@ -14,6 +14,7 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+// Grabs organization from ~/.bkcli/config (ini format)
 func getOrg(profile string) string {
 	homePath := os.Getenv("HOME")
 
@@ -97,7 +98,7 @@ func getLatestBuild(token string, apiEndpoint string, organization string, pipel
 	return gjson.Get(response, "0.number").String()
 }
 
-func getJobIds(token string, apiEndpoint string, organization string, pipeline string, build string, follow bool) {
+func getJobIds(token string, apiEndpoint string, organization string, pipeline string, build string, follow bool, pollRate time.Duration) {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s", apiEndpoint, organization, pipeline, build)
 	response := httprequest(token, url, "GET")
 
@@ -138,7 +139,7 @@ func getJobIds(token string, apiEndpoint string, organization string, pipeline s
 							oldlines = lines
 							lines = strings.Count(log, "\n")
 							// Check for new log output every 1 second
-							time.Sleep(1 * time.Second)
+							time.Sleep(pollRate)
 						}
 					}
 				}
@@ -154,7 +155,7 @@ func getJobIds(token string, apiEndpoint string, organization string, pipeline s
 }
 
 // Returns the build id for a commit hash
-func findCommit(token string, apiEndpoint string, organization string, pipeline string, commit string, follow bool) string {
+func findCommit(token string, apiEndpoint string, organization string, pipeline string, commit string) string {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds?commit=%s", apiEndpoint, organization, pipeline, commit)
 	response := httprequest(token, url, "GET")
 	build := gjson.Get(response, "0.number").String()
@@ -184,6 +185,7 @@ var (
 	follow       = kingpin.Flag("follow", "Follow build output").Short('f').Bool()
 	agents       = kingpin.Flag("agents", "List agents").Short('a').Bool()
 	profile      = kingpin.Flag("profile", "token profile").Default("default").String()
+	pollRate     = kingpin.Flag("pollrate", "Rate at which to poll api when following logs").Default("2s").Duration()
 )
 
 // Version number to be passed in during compile time
@@ -214,7 +216,6 @@ func main() {
 			*organization = getOrg(*profile)
 		}
 	}
-	fmt.Println(*organization)
 
 	// Check if agents flag is passed
 	if *agents {
@@ -237,20 +238,20 @@ func main() {
 	// First check if just a pipeline name is passed
 	if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) == 0 {
 		build := getLatestBuild(token, *apiEndpoint, *organization, *pipeline)
-		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow)
+		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow, *pollRate)
 		os.Exit(0)
 	}
 
 	// If a pipeline name and build number args are passed
 	if len(*pipeline) > 0 && len(*build) > 0 && len(*commit) == 0 {
-		getJobIds(token, *apiEndpoint, *organization, *pipeline, *build, *follow)
+		getJobIds(token, *apiEndpoint, *organization, *pipeline, *build, *follow, *pollRate)
 		os.Exit(0)
 	}
 
 	// If a pipeline name and commit hash args are passed
 	if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) > 0 {
-		build := findCommit(token, *apiEndpoint, *organization, *pipeline, *commit, *follow)
-		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow)
+		build := findCommit(token, *apiEndpoint, *organization, *pipeline, *commit)
+		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow, *pollRate)
 		os.Exit(0)
 	}
 }

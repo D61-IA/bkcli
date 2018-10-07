@@ -4,11 +4,10 @@ An easy to use buildkite command line tool.
 
 Features:
 
-* Prints out logs in `ANSI` colors
+* Prints logs in `ANSI` color
 * `tail -f` style output for build logs
 * Trigger builds from the command line
 * Uses config ini (`~/.bkcli/config`) to manage all your different tokens and orgs 
-
 
 ## Installing
 
@@ -16,15 +15,15 @@ Features:
 
 ## Building
 
-* Install [govendor](https://github.com/kardianos/govendor)
+Install [govendor](https://github.com/kardianos/govendor)
 
 ```bash
 go get -u github.com/kardianos/govendor
 ```
 
-* Set the project in the `$GOPATH/src`. In the repo folder, run `govendor sync` or `make sync` to pull down the packages in the vendor folder.
+Set the project in the `$GOPATH/src`. In the repo folder, run `govendor sync` or `make sync` to pull down the packages in the vendor folder.
 
-* To compile run `make linux`, for linux builds, `make darwin` for MacOS builds, and `make windows` for Windows builds (`64-bit` architecture is assumed in all cases).
+To compile run `make linux`, for linux builds, `make darwin` for MacOS builds, and `make windows` for Windows builds (`64-bit` architecture is assumed in all cases).
 
 
 ## Buildkite Tokens
@@ -51,7 +50,7 @@ organization = stellar
 
 Note that other profiles can be selected with the `--profile` flag.
  
-## Running
+## Usage
 
 `bkcli --help` or just `bkcli` will show the help output.
 
@@ -86,11 +85,13 @@ To re-trigger a particular build
 bkcli -p <pipeline> -b <build number> -t
 ```
 
-### Listing Agent
+### Listing Agents
 
 ```bash
 bkcli -a
 ```
+
+Will return in `JSON` format for parsing
 
 ### Useful aliases
 
@@ -117,6 +118,13 @@ For `zsh`
 ```bash
 eval "$(bkcli --completion-script-zsh)"
 ```
+
+## Docker
+
+To build the image `stellargraph/bkcli` run `./docker/build.sh`, or pull the latest image `docker pull stellargraph/bkcli`
+
+To use a token with the docker image, inject the token as the environment variable `BUILDKITE_TOKEN`
+
 
 ## Contributing
 
