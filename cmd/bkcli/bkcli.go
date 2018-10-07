@@ -15,7 +15,7 @@ import (
 )
 
 // Grabs token from ~/.bkcli/config (ini format)
-func getToken() string {
+func getToken(profile string) string {
 
 	homePath := os.Getenv("HOME")
 
@@ -24,7 +24,7 @@ func getToken() string {
 		log.Fatalln(err)
 	}
 
-	token := cfg.Section("default").Key("token").String()
+	token := cfg.Section(profile).Key("token").String()
 
 	if len(token) == 0 {
 		log.Fatalln("buildkite token is empty")
@@ -163,12 +163,13 @@ var (
 	build        = kingpin.Flag("build", "Buildkite bulild number").Short('b').String()
 	commit       = kingpin.Flag("commit", "Commit hash").Short('c').String()
 	trigger      = kingpin.Flag("trigger", "Trigger a build").Short('t').Bool()
-	follow       = kingpin.Flag("follow", "follow build output").Short('f').Bool()
-	agents       = kingpin.Flag("agents", "list agents").Short('a').Bool()
+	follow       = kingpin.Flag("follow", "Follow build output").Short('f').Bool()
+	agents       = kingpin.Flag("agents", "List agents").Short('a').Bool()
+	profile      = kingpin.Flag("profile", "token profile").Default("default").String()
 )
 
 // Version number to be passed in during compile time
-var Version = "No Version Produced"
+var Version = "Non-versioned build"
 
 func main() {
 
@@ -179,9 +180,10 @@ func main() {
 	// Print help if no arguments are passed
 	if len(os.Args) == 1 {
 		kingpin.Usage()
+		os.Exit(0)
 	}
 
-	token := getToken()
+	token := getToken(*profile)
 
 	// Check if agents flag is passed
 	if *agents {
@@ -189,7 +191,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Check if user wants to trigger a build
+	// First check if user wants to trigger a build before log checking
 	if *trigger {
 		if len(*pipeline) > 0 && len(*build) > 0 {
 			triggerBuild(token, *apiEndpoint, *organization, *pipeline, *build)
@@ -200,20 +202,21 @@ func main() {
 		os.Exit(0)
 	}
 
-	// If only a pipeline name is passed
+	// Log checking for different cases
+	// First check if just a pipeline name is passed
 	if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) == 0 {
 		build := getLatestBuild(token, *apiEndpoint, *organization, *pipeline)
 		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow)
 		os.Exit(0)
 	}
 
-	// If a pipeline name and build number is passed
+	// If a pipeline name and build number args are passed
 	if len(*pipeline) > 0 && len(*build) > 0 && len(*commit) == 0 {
 		getJobIds(token, *apiEndpoint, *organization, *pipeline, *build, *follow)
 		os.Exit(0)
 	}
 
-	// If a pipeline name and commit hash is passed
+	// If a pipeline name and commit hash args are passed
 	if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) > 0 {
 		build := findCommit(token, *apiEndpoint, *organization, *pipeline, *commit, *follow)
 		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow)
