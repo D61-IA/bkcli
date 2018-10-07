@@ -60,7 +60,7 @@ func httprequest(token string, url string, method string) string {
 
 }
 
-// Returns the list of pipelines`
+// Returns the list of pipelines
 func getPipelines(token string, apiEndpoint string, organization string) string {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines", apiEndpoint, organization)
 	return httprequest(token, url, "GET")
@@ -183,6 +183,7 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Environment variable for the token takes precedence
 	token := os.Getenv("BUILDKITE_TOKEN")
 	if len(token) == 0 {
 		token = getToken(*profile)
