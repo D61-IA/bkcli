@@ -6,12 +6,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/tidwall/gjson"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/ini.v1"
 )
 
+// Grabs token from ~/.bkcli/config (ini format)
 func getToken() string {
 
 	homePath := os.Getenv("HOME")
@@ -30,6 +33,7 @@ func getToken() string {
 	return token
 }
 
+// Wrapper function for requests to the API
 func httprequest(token string, url string, method string) string {
 
 	req, err := http.NewRequest(method, url, nil)
@@ -39,6 +43,7 @@ func httprequest(token string, url string, method string) string {
 
 	tokenHeader := fmt.Sprintf("Bearer %s", token)
 	req.Header.Set("Authorization", tokenHeader)
+	// Use text/plain to ensure log output is in ansi
 	req.Header.Set("Accept", "text/plain")
 	client := &http.Client{}
 
@@ -55,16 +60,19 @@ func httprequest(token string, url string, method string) string {
 
 }
 
+// Returns the list of pipelines`
 func getPipelines(token string, apiEndpoint string, organization string) string {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines", apiEndpoint, organization)
 	return httprequest(token, url, "GET")
 }
 
+// Returns the log output for a job
 func getLog(token string, apiEndpoint string, organization string, pipeline string, build string, jobID string) string {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s/jobs/%s/log", apiEndpoint, organization, pipeline, build, jobID)
 	return httprequest(token, url, "GET")
 }
 
+// Returns the latest build for a pipeline
 func getLatestBuild(token string, apiEndpoint string, organization string, pipeline string) string {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds", apiEndpoint, organization, pipeline)
 	response := httprequest(token, url, "GET")
@@ -75,24 +83,73 @@ func getJobIds(token string, apiEndpoint string, organization string, pipeline s
 	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s", apiEndpoint, organization, pipeline, build)
 	response := httprequest(token, url, "GET")
 
+	// Get a list of all job ids
 	ids := gjson.Get(response, "jobs.#.id")
-	for _, id := range ids.Array() {
-		fmt.Println(getLog(token, apiEndpoint, organization, pipeline, build, id.String()))
+
+	// If the follow flag is pased attemp to do a "tail -f"
+	if follow {
+		jobStatus := gjson.Get(response, "jobs.#.finished_at")
+		jobCount := len(jobStatus.Array())
+		for index, id := range jobStatus.Array() {
+			// Ensure jobs array is less than the jobs with statuses
+			if index < jobCount {
+				log := getLog(token, apiEndpoint, organization, pipeline, build, ids.Array()[index].String())
+				// Count the lines of the log
+				lines := strings.Count(log, "\n")
+				// If "finished_at" key is nonempty the job is finished, so we just print the full log
+				if len(id.String()) > 0 {
+					if lines > 0 {
+						fmt.Println(log)
+					}
+					// Otherwise if the finished_at" key is empty, job isn't complete to "tail -f" is attempted
+				} else {
+					fmt.Println(log)
+					oldlines := 0
+					// Loop until the jobStatus ("finished_at") is nonempty
+					for len(jobStatus.Array()[index].String()) <= 0 {
+						if lines > 0 {
+							split := strings.Split(log, "\n")
+							// If lines have changed between "polls", print the new lines
+							if oldlines != lines {
+								for i := oldlines; i < len(split); i++ {
+									fmt.Println(split[i])
+								}
+							}
+							jobStatus = gjson.Get(httprequest(token, url, "GET"), "jobs.#.finished_at")
+							log = getLog(token, apiEndpoint, organization, pipeline, build, ids.Array()[index].String())
+							oldlines = lines
+							lines = strings.Count(log, "\n")
+							// Check for new log output every 1 second
+							time.Sleep(1 * time.Second)
+						}
+					}
+				}
+			}
+		}
+	} else {
+		// If no follow flag is passed, loop through all job Ids and print the logs
+		for _, id := range ids.Array() {
+			log := getLog(token, apiEndpoint, organization, pipeline, build, id.String())
+			fmt.Println(log)
+		}
 	}
 }
 
-func findCommit(token string, apiEndpoint string, organization string, pipeline string, commit string, follow bool) {
+// Returns the build id for a commit hash
+func findCommit(token string, apiEndpoint string, organization string, pipeline string, commit string, follow bool) string {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds?commit=%s", apiEndpoint, organization, pipeline, commit)
 	response := httprequest(token, url, "GET")
 	build := gjson.Get(response, "0.number").String()
-	getJobIds(token, apiEndpoint, organization, pipeline, build, follow)
+	return build
 }
 
+// Triggers a build
 func triggerBuild(token string, apiEndpoint string, organization string, pipeline string, build string) {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s/rebuild", apiEndpoint, organization, pipeline, build)
 	httprequest(token, url, "PUT")
 }
 
+// Returns the list of buildkite Agents
 func listAgents(token string, apiEndpoint string, organization string) {
 	url := fmt.Sprintf("%s/organizations/%s/agents", apiEndpoint, organization)
 	response := httprequest(token, url, "GET")
@@ -110,22 +167,29 @@ var (
 	agents       = kingpin.Flag("agents", "list agents").Short('a').Bool()
 )
 
-// Version number to be passed in during build
+// Version number to be passed in during compile time
 var Version = "No Version Produced"
 
 func main() {
 
-	kingpin.UsageTemplate(kingpin.CompactUsageTemplate).Version("1.0").Author("Denis Khoshaba")
+	kingpin.UsageTemplate(kingpin.CompactUsageTemplate).Version(Version).Author("Denis Khoshaba")
 	kingpin.CommandLine.Help = "Buildkite cli tool"
 	kingpin.Parse()
 
+	// Print help if no arguments are passed
+	if len(os.Args) == 1 {
+		kingpin.Usage()
+	}
+
 	token := getToken()
 
+	// Check if agents flag is passed
 	if *agents {
 		listAgents(token, *apiEndpoint, *organization)
 		os.Exit(0)
 	}
 
+	// Check if user wants to trigger a build
 	if *trigger {
 		if len(*pipeline) > 0 && len(*build) > 0 {
 			triggerBuild(token, *apiEndpoint, *organization, *pipeline, *build)
@@ -136,13 +200,23 @@ func main() {
 		os.Exit(0)
 	}
 
+	// If only a pipeline name is passed
 	if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) == 0 {
 		build := getLatestBuild(token, *apiEndpoint, *organization, *pipeline)
 		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow)
-	} else if len(*pipeline) > 0 && len(*build) > 0 && len(*commit) == 0 {
-		getJobIds(token, *apiEndpoint, *organization, *pipeline, *build, *follow)
-	} else if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) > 0 {
-		findCommit(token, *apiEndpoint, *organization, *pipeline, *commit, *follow)
+		os.Exit(0)
 	}
-	os.Exit(0)
+
+	// If a pipeline name and build number is passed
+	if len(*pipeline) > 0 && len(*build) > 0 && len(*commit) == 0 {
+		getJobIds(token, *apiEndpoint, *organization, *pipeline, *build, *follow)
+		os.Exit(0)
+	}
+
+	// If a pipeline name and commit hash is passed
+	if len(*pipeline) > 0 && len(*build) == 0 && len(*commit) > 0 {
+		build := findCommit(token, *apiEndpoint, *organization, *pipeline, *commit, *follow)
+		getJobIds(token, *apiEndpoint, *organization, *pipeline, build, *follow)
+		os.Exit(0)
+	}
 }
