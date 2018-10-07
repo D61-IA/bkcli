@@ -11,3 +11,5 @@ Session.vim
 *.bak
 # binaries
 bin/
+vendor/*
+!vendor/vendor.json
