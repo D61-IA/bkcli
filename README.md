@@ -7,10 +7,36 @@ Features:
 * Prints logs in `ANSI` color
 * `tail -f` style output for build logs
 * Trigger builds from the command line
-* Uses config ini (`~/.bkcli/config`) to manage all your different tokens and orgs 
+* Uses config ini (`~/.bkcli/config`) to manage different tokens and orgs
 
 ## Installing
 
+
+1. Download the latest [release](https://github.com/stellargraph/bkcli/releases) binary for your platform
+2. Make sure it's executable
+3. Move the binary to a folder in your `$PATH`
+
+For example, assuming `/usr/local/bin` is in your `$PATH`
+
+### Linux
+
+```bash
+wget https://github.com/stellargraph/bkcli/releases/download/v0.0.1/bkcli-linux
+chmod +x bkcli-linux
+mv bkcli-linux /usr/local/bin/
+```
+
+### MacOS
+
+```bash
+wget https://github.com/stellargraph/bkcli/releases/download/v0.0.1/bkcli-macOS
+chmod +x bkcli-macOS
+mv bkcli-macOS /usr/local/bin/
+```
+
+### Windows
+
+Currently untested
 
 
 ## Building
@@ -30,7 +56,7 @@ To compile run `make linux`, for linux builds, `make darwin` for MacOS builds, a
 
 A buildkite token is needed to interact with buildkite's API.
 
-`bkcli` can read the token from the environment variavle `BUILDKITE_TOKEN` or from a config file `~/.bkcli/config`. Note that the environment variable for the token takes precedence over the config file. 
+`bkcli` can read the token from the environment variavle `BUILDKITE_TOKEN` or from a config file `~/.bkcli/config`. Note that the environment variable for the token takes precedence over the config file.
 
 For the default buildkite organization, the command line argument `--organization` takes precedence over the environment variable `BUILDKITE_ORG`, then over the config file.
 
@@ -49,7 +75,7 @@ organization = stellar
 ```
 
 Note that other profiles can be selected with the `--profile` flag.
- 
+
 ## Usage
 
 `bkcli --help` or just `bkcli` will show the help output.
@@ -105,7 +131,7 @@ note that it assumes the repo name is the same as the pipeline name
 
 ## Bash/ZSH Shell Completion
 
-For bash/zsh completions, add the code snippet to your relevant dotfile, e.g., `~/.bash_profile` 
+For bash/zsh completions, add the code snippet to your relevant dotfile, e.g., `~/.bash_profile`
 
 For `bash`
 
