@@ -14,6 +14,24 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+func getOrg(profile string) string {
+	homePath := os.Getenv("HOME")
+
+	cfg, err := ini.Load(fmt.Sprintf("%s/.bkcli/config", homePath))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	organization := cfg.Section(profile).Key("organization").String()
+
+	if len(organization) == 0 {
+		log.Fatalln("buildkite org given is empty")
+	}
+
+	return organization
+
+}
+
 // Grabs token from ~/.bkcli/config (ini format)
 func getToken(profile string) string {
 
@@ -158,7 +176,7 @@ func listAgents(token string, apiEndpoint string, organization string) {
 
 var (
 	apiEndpoint  = kingpin.Flag("api-endpoint", "Buildkite API endpoint").Default("https://api.buildkite.com/v2").String()
-	organization = kingpin.Flag("organization", "Buildkite organization").Default("stellar").String()
+	organization = kingpin.Flag("organization", "Buildkite organization").String()
 	pipeline     = kingpin.Flag("pipeline", "Buildkite Pipeline").Short('p').String()
 	build        = kingpin.Flag("build", "Buildkite bulild number").Short('b').String()
 	commit       = kingpin.Flag("commit", "Commit hash").Short('c').String()
@@ -188,6 +206,15 @@ func main() {
 	if len(token) == 0 {
 		token = getToken(*profile)
 	}
+
+	// Flag for org takes precedence over the env var then profile
+	if len(*organization) == 0 {
+		*organization = os.Getenv("BUILDKITE_ORG")
+		if len(*organization) == 0 {
+			*organization = getOrg(*profile)
+		}
+	}
+	fmt.Println(*organization)
 
 	// Check if agents flag is passed
 	if *agents {
