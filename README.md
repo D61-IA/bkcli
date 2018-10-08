@@ -9,6 +9,7 @@ Features:
 * Trigger builds from the command line
 * Uses config ini (`~/.bkcli/config`) to manage different tokens and orgs
 
+
 ## Installing
 
 
@@ -55,6 +56,25 @@ To compile run `make linux`, for linux builds, `make darwin` for MacOS builds, a
 ## Buildkite Tokens
 
 A buildkite token is needed to interact with buildkite's API.
+
+
+### Creating a Token
+
+Visit [https://buildkite.com/user/api-access-tokens](https://buildkite.com/user/api-access-tokens) to create a token
+
+![API Token Generate](./docs/apitoken.png)
+
+### Scope
+
+The scopes the token needs for `bkcli`:
+
+* `read_agents`
+* `read_builds`
+* `read_build_logs`
+* `read_pipelines`
+* `write_builds` 
+
+### Setup
 
 `bkcli` can read the token from the environment variavle `BUILDKITE_TOKEN` or from a config file `~/.bkcli/config`. Note that the environment variable for the token takes precedence over the config file.
 
@@ -154,5 +174,5 @@ To use a token with the docker image, inject the token as the environment variab
 
 ## Contributing
 
-
+Pull requests and issues are welcome
 
