@@ -138,8 +138,11 @@ func getJobIds(token string, apiEndpoint string, organization string, pipeline s
 							log = getLog(token, apiEndpoint, organization, pipeline, build, ids.Array()[index].String())
 							oldlines = lines
 							lines = strings.Count(log, "\n")
-							// Check for new log output every 1 second
+							// Check for new log output at pollRate
 							time.Sleep(pollRate)
+							// break polling if no more lines are left
+						} else {
+							break
 						}
 					}
 				}
