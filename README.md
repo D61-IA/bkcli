@@ -144,7 +144,7 @@ Will return in `JSON` format for parsing
 To get a tail of the log of a particular git repo after a commit has been made
 
 ```bash
-getlog='bkcli -c $(git rev-parse HEAD) -p $(basename $(git rev-parse --show-toplevel)) -f'
+alias getlog='bkcli -c $(git rev-parse HEAD) -p $(basename $(git rev-parse --show-toplevel)) -f'
 ```
 
 note that it assumes the repo name is the same as the pipeline name
