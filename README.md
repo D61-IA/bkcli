@@ -24,7 +24,7 @@ For example, assuming `/usr/local/bin` is in your `$PATH`
 ```bash
 wget https://github.com/stellargraph/bkcli/releases/download/v0.0.1/bkcli-linux
 chmod +x bkcli-linux
-mv bkcli-linux /usr/local/bin/
+mv bkcli-linux /usr/local/bin/bkcli
 ```
 
 ### MacOS
@@ -32,7 +32,7 @@ mv bkcli-linux /usr/local/bin/
 ```bash
 wget https://github.com/stellargraph/bkcli/releases/download/v0.0.1/bkcli-macOS
 chmod +x bkcli-macOS
-mv bkcli-macOS /usr/local/bin/
+mv bkcli-macOS /usr/local/bin/bkcli
 ```
 
 ### Windows
