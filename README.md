@@ -72,7 +72,9 @@ The scopes the token needs for `bkcli`:
 * `read_builds`
 * `read_build_logs`
 * `read_pipelines`
-* `write_builds` 
+* `write_builds`
+
+GraphQL API Access is not needed
 
 ### Setup
 
@@ -146,8 +148,13 @@ To get a tail of the log of a particular git repo after a commit has been made
 ```bash
 alias getlog='bkcli -c $(git rev-parse HEAD) -p $(basename $(git rev-parse --show-toplevel)) -f'
 ```
-
 note that it assumes the repo name is the same as the pipeline name
+
+To use the remote origin url
+
+```bash
+alias getlog='bkcli -c $(git rev-parse HEAD) -p $(basename -s .git $(git config --get remote.origin.url)) -f'
+```
 
 ## Bash/ZSH Shell Completion
 
