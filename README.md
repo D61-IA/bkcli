@@ -1,5 +1,14 @@
 # bkcli
 
+<p align="center">
+  <a href="https://github.com/stellargraph/bkcli/issues" alt="contributions welcome">
+    <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg"/></a>
+  <a href="https://github.com/stellargraph/bkcli/blob/develop/LICENSE" alt="license">
+    <img src="https://img.shields.io/github/license/stellargraph/bkcli.svg"/></a>
+  <a href="http://hub.docker.com/r/stellargraph/bkcli" alt="docker hub">
+    <img src="https://images.microbadger.com/badges/version/stellargraph/bkcli.svg"/></a>
+</p>
+
 An easy to use buildkite command line tool.
 
 Features:
@@ -181,5 +190,5 @@ To use a token with the docker image, inject the token as the environment variab
 
 ## Contributing
 
-Pull requests and issues are welcome
+Issues and pull requests and are welcome
 
