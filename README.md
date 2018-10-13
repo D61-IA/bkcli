@@ -9,9 +9,8 @@
     <img src="https://images.microbadger.com/badges/version/stellargraph/bkcli.svg"/></a>
 </p>
 
-An easy to use buildkite command line tool.
 
-Features:
+`bkcli` is an easy to use buildkite command line tool. Features include:
 
 * Prints logs in `ANSI` color
 * `tail -f` style output for build logs
@@ -190,5 +189,4 @@ To use a token with the docker image, inject the token as the environment variab
 
 ## Contributing
 
-Issues and pull requests and are welcome
-
+GitHub issue submissions and pull requests and are welcome
