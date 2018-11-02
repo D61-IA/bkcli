@@ -6,16 +6,16 @@
   <a href="https://github.com/stellargraph/bkcli/blob/develop/LICENSE" alt="license">
     <img src="https://img.shields.io/github/license/stellargraph/bkcli.svg"/></a>
   <a href="http://hub.docker.com/r/stellargraph/bkcli" alt="docker hub">
-    <img src="https://images.microbadger.com/badges/version/stellargraph/bkcli.svg"/></a>
+    <img src="https://images.microbadger.com/badges/image/stellargraph/bkcli.svg"/></a>
 </p>
 
-An easy to use buildkite command line tool.
 
-Features:
+`bkcli` is an easy to use buildkite command line tool. Features include:
 
 * Prints logs in `ANSI` color
 * `tail -f` style output for build logs
 * Trigger builds from the command line
+* Check which steps failed for a build
 * Uses config ini (`~/.bkcli/config`) to manage different tokens and orgs
 
 
@@ -190,5 +190,4 @@ To use a token with the docker image, inject the token as the environment variab
 
 ## Contributing
 
-Issues and pull requests and are welcome
-
+GitHub issue submissions and pull requests and are welcome
