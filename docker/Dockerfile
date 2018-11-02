@@ -3,8 +3,6 @@ FROM golang:alpine AS builder
 WORKDIR /go/src/github.com/stellargraph/bkcli/
 COPY . /go/src/github.com/stellargraph/bkcli/
 
-#ENV GOPATH /workdir
-
 RUN apk add --no-cache --update make git \
       && go get -u github.com/kardianos/govendor \
       && /go/bin/govendor sync \

@@ -15,6 +15,7 @@
 * Prints logs in `ANSI` color
 * `tail -f` style output for build logs
 * Trigger builds from the command line
+* Check which steps failed for a build
 * Uses config ini (`~/.bkcli/config`) to manage different tokens and orgs
 
 
