@@ -98,6 +98,17 @@ func getLatestBuild(token string, apiEndpoint string, organization string, pipel
 	return gjson.Get(response, "0.number").String()
 }
 
+func showFailedSteps(token string, apiEndpoint string, organization string, pipeline string, build string) {
+	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s", apiEndpoint, organization, pipeline, build)
+	response := httprequest(token, url, "GET")
+	states := gjson.Get(response, "jobs.#.state").Array()
+	for index, state := range states {
+		if state.String() == "failed" {
+			fmt.Println(gjson.Get(response, fmt.Sprintf("jobs.%v.name", index)))
+		}
+	}
+}
+
 func getJobIds(token string, apiEndpoint string, organization string, pipeline string, build string, follow bool, pollRate time.Duration) {
 	url := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds/%s", apiEndpoint, organization, pipeline, build)
 	response := httprequest(token, url, "GET")
@@ -189,6 +200,7 @@ var (
 	agents       = kingpin.Flag("agents", "List agents").Short('a').Bool()
 	profile      = kingpin.Flag("profile", "token profile").Default("default").String()
 	pollRate     = kingpin.Flag("pollrate", "Rate at which to poll api when following logs").Default("2s").Duration()
+	showfailed   = kingpin.Flag("show-failed", "Show the failed step(s) for a build").Bool()
 )
 
 // Version number to be passed in during compile time
@@ -247,8 +259,12 @@ func main() {
 
 	// If a pipeline name and build number args are passed
 	if len(*pipeline) > 0 && len(*build) > 0 && len(*commit) == 0 {
-		getJobIds(token, *apiEndpoint, *organization, *pipeline, *build, *follow, *pollRate)
-		os.Exit(0)
+		if *showfailed {
+			showFailedSteps(token, *apiEndpoint, *organization, *pipeline, *build)
+		} else {
+			getJobIds(token, *apiEndpoint, *organization, *pipeline, *build, *follow, *pollRate)
+			os.Exit(0)
+		}
 	}
 
 	// If a pipeline name and commit hash args are passed
