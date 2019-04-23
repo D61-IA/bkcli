@@ -10,7 +10,6 @@ RUN apk add --no-cache --update make git \
 
 FROM alpine:3.8
 
-RUN apk add ca-certificates
 COPY --from=builder /go/src/github.com/stellargraph/bkcli/bin/linux /app/
 
 WORKDIR /app
