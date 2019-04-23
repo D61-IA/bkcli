@@ -219,7 +219,7 @@ func main() {
 	}
 
 	// Environment variable for the token takes precedence
-	token := os.Getenv("BUILDKITE_API_TOKEN")
+	token := os.Getenv("BUILDKITE_TOKEN")
 	if len(token) == 0 {
 		token = getToken(*profile)
 	}
